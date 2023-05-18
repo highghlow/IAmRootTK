@@ -64,7 +64,8 @@ def get_toolkit_mounts():
 
 def mount_device(os, device):
     target = MOUNT.format(os=os, rng=random.randint(1, 256))
-    run("mount -m "+device+" "+target)
+    oslib.makedirs(target, exist_ok=True)
+    run("mount "+device+" "+target)
     return target
 
 def is_linux(device):
