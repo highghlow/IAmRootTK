@@ -68,7 +68,11 @@ def mount_device(os, device):
     return target
 
 def is_linux(device):
-    ls_output = run("debugfs -R \"ls -l\" "+device)
+    try:
+        ls_output = run("debugfs -R \"ls -l\" "+device)
+    except subprocess.CalledProcessError as e:
+        print(e)
+        return False
     ls_lines = ls_output.split("\n")
     ls_contents = set([i.split(" ")[-1] for i in ls_lines])
     if LINUX_ROOT.intersection(ls_contents) == LINUX_ROOT: # LINUX_ROOT is fully contained in ls_contents
@@ -77,7 +81,11 @@ def is_linux(device):
         return False
 
 def is_windows(device):
-    ls_output = run("sudo ntfsls -f "+device)
+    try:
+        ls_output = run("sudo ntfsls -f "+device)
+    except subprocess.CalledProcessError as e:
+        print(e)
+        return False
     ls_contents = ls_output.split("\n")
     if WINDOWS_ROOT.intersection(ls_contents) == WINDOWS_ROOT: # WINDOWS_ROOT is fully contained in ls_contents
         return True
