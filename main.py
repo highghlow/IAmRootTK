@@ -63,6 +63,9 @@ def get_toolkit_mounts():
     return glob.glob(MOUNT.format(os="*", rng="*"))
 
 def mount_device(os, device):
+    mounts = get_mounts(device)
+    if mounts:
+        return mounts[0]
     target = MOUNT.format(os=os, rng=random.randint(1, 256))
     oslib.makedirs(target, exist_ok=True)
     run("mount "+device+" "+target)
@@ -224,6 +227,7 @@ def main():
             print("Linux compatible filesystem on", device)
             if "/" in get_mounts(device):
                 print(device, "is mounted as root")
+                oses.append(("Linux_self", device))
                 continue
             if is_linux(device):
                 print("Linux on", device)
@@ -236,6 +240,8 @@ def main():
     print("=== OSs ===")
     for ind, osdata in enumerate(oses):
         os, device = osdata
+        if os == "Linux_self":
+            os = "Linux (current)"
         print(f"[{ind}]", os, "on", device)
     osid = int(input("Select os to roothack: "))
     os, device = oses[osid]
@@ -243,7 +249,7 @@ def main():
     print("Mounted as", mountpoint)
     if os == "Windows":
         roothack_windows(mountpoint)
-    elif os == "Linux":
+    elif os.startswith("Linux"):
         roothack_linux(mountpoint)
     
 
