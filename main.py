@@ -173,7 +173,7 @@ def roothack_linux(mountpoint):
             if uid_min <= uid <= uid_max:
                 users.append((uname, homedir))
     users.append(("all", "/usr/share"))
-    print(f"Found {len(users)} users")
+    print(f"Found {len(users)-1} users")
     for ind, userdata in enumerate(users):
         username, home = userdata
         if oslib.path.exists(oslib.path.join(mountpoint, home, "iamroot")):
