@@ -156,10 +156,17 @@ def run_chroot(chroot, cmd):
 def roothack_linux(mountpoint):
     print("Linux roothack")
     print("Loading users...")
-    users_raw = run_chroot(mountpoint, "getent passwd {1000..60000}").split("\n")[:-1]
-    users = [
-        (i.split(":")[0], i.split(":")[5]) for i in users_raw
-    ]
+    uid_min = int(run_chroot(mountpoint, "awk '/^UID_MIN/ {print $2}' /etc/login.defs"))
+    uid_max = int(run_chroot(mountpoint, "awk '/^UID_MAX/ {print $2}' /etc/login.defs"))
+    print(f"Min UID: {uid_min}")
+    print(f"Max UID: {uid_max}")
+    users = []
+    with open(oslib.path.join(mountpoint, "etc/passwd")) as f:
+        for line in f:
+            uname, passwd, uid, gid, longname, homedir, cmd = line.split(":")
+            uid, gid = int(uid), int(gid)
+            if uid_min <= uid <= uid_max:
+                users.append((uname, homedir))
     users.append(("all", "/usr/share"))
     print(f"Found {len(users)} users")
     for ind, userdata in enumerate(users):
