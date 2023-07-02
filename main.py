@@ -20,7 +20,7 @@ WINDOWS_ROOT = {
 }
 
 def run(cmd):
-    return subprocess.check_output(cmd, shell=True, stderr=open("/dev/null", "w")).decode("ascii").rstrip("\n")
+    return subprocess.check_output(cmd, shell=True, stderr=open("/dev/null", "w")).decode("utf-8").rstrip("\n")
 
 def joinparts(lst, maxparts, joiner=" "):
     return lst[:maxparts-1] + [joiner.join(lst[maxparts-1:])]
