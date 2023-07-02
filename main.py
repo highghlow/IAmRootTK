@@ -177,7 +177,7 @@ def roothack_linux(mountpoint):
     location_local = mountpoint + oslib.path.join(user[1], "iamroot")
     location_chroot = oslib.path.join(user[1], "iamroot")
 
-    print(f"Saving to {location_local}...")
+    print(f"Saving to {location_chroot}...")
     if oslib.path.exists(location_local):
         print("System is already roothacked")
         if input("Do you wand to remove it (N/y)? ").lower() == "y":
