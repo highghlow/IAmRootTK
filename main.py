@@ -2,22 +2,10 @@ import subprocess
 import glob
 import random
 import os as oslib
+import linux
+import windows
 
 MOUNT = "/mnt/iamroot-{os}-{rng}/"
-
-LINUX_ROOT = {
-    "bin",
-    "dev",
-    "etc",
-    "lib",
-    "lost+found",
-    "tmp",
-    "usr"
-}
-WINDOWS_ROOT = {
-    "Windows",
-    "Users"
-}
 
 def run(cmd):
     return subprocess.check_output(cmd, shell=True, stderr=open("/dev/null", "w")).decode("utf-8").rstrip("\n")
@@ -112,12 +100,12 @@ def main():
                 print(device, "is mounted as root")
                 oses.append(("Linux_self", device))
                 continue
-            if is_linux(device):
+            if linux.is_linux(device):
                 print("Linux on", device)
                 oses.append(("Linux", device))
         elif type == "Microsoft basic data":
             print("Windows compatible filesystem on", device)
-            if is_windows(device):
+            if windows.is_windows(device):
                 print("Windows on", device)
                 oses.append(("Windows", device))
     print("=== OSs ===")
@@ -129,6 +117,7 @@ def main():
     osid = int(input("Select os to roothack: "))
     os, device = oses[osid]
     mountpoint = mount_device(os, device)
+    
     print("Mounted as", mountpoint)
     if os == "Windows":
         if is_readonly(mountpoint):
@@ -138,7 +127,7 @@ def main():
             exit(1)
         windows.roothack_windows(mountpoint)
     elif os.startswith("Linux"):
-        roothack_linux(mountpoint)
+        linux.roothack_linux(mountpoint)
     
 
 if __name__ == "__main__":
