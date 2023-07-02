@@ -208,7 +208,7 @@ def roothack_linux(mountpoint):
     print("~/iamroot")
 
 def main():
-    if run("whoami") != "root":
+    if oslib.getuid() != 0:
         print("Not root")
         print("You need to run this from a live usb on the computer you want to roothack")
         print("You can either do this through BIOS (Google: \"<device manufacturer> boot from USB\")")
