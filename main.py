@@ -176,7 +176,10 @@ def roothack_linux(mountpoint):
     print(f"Found {len(users)} users")
     for ind, userdata in enumerate(users):
         username, home = userdata
-        print(f"[{ind}] {username} ({home})")
+        if oslib.path.exists(oslib.path.join(mountpoint, home, "iamroot")):
+            print(f"[{ind}] {username} ({home}) (roothacked)")
+        else:
+            print(f"[{ind}] {username} ({home})")
     userind = int(input("Select user to give root to: "))
     user = users[userind]
     location_local = mountpoint + oslib.path.join(user[1], "iamroot")
