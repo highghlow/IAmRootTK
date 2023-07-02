@@ -146,6 +146,8 @@ def roothack_windows(mountpoint):
         run(rf"hivexregedit --merge {HKLM_Sam_Hive} temp.reg")
         print("Ceaning up...")
         print("Enabled EvelatedAdmin")
+        print("You can now boot back into the os log in as Administrator")
+        print("This account can have diffrent names depending on the system language")
         oslib.remove("temp.reg")
 
 def run_chroot(chroot, cmd):
@@ -202,6 +204,8 @@ def roothack_linux(mountpoint):
     run_chroot(mountpoint, cmd)
 
     print("Saved root shell at", location_chroot)
+    print("You can now boot back into the os and run:")
+    print("~/iamroot")
 
 def main():
     if run("whoami") != "root":
