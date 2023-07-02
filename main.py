@@ -124,8 +124,13 @@ def roothack_windows(mountpoint):
             oslib.remove("temp.reg")
             print("Disabled ElevatedAdmin")
         exit(0)
-    elif enabled == "11":
-        print("Found the correct byte!")
+    if enabled != "11" and enabled != "10":
+        print("Elevated Admin user is corrupted.")
+        if input("Try to recover (The system may be damaged!) (N/y)? ").lower() == "y":
+            enabled = "11"
+        else:
+            exit(1)
+    if enabled == "11":
         print("Creating temp.reg...")
         bts[56] = "10"
         contents = fr"""
@@ -139,9 +144,6 @@ def roothack_windows(mountpoint):
         print("Ceaning up...")
         print("Enabled EvelatedAdmin")
         oslib.remove("temp.reg")
-    else:
-        print("Elevated Admin user is corrupted.")
-        exit(1)
 
 def run_chroot(chroot, cmd):
     proc = subprocess.Popen(f"sudo chroot {chroot} {cmd}", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
