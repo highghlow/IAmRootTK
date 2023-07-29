@@ -1,5 +1,6 @@
 import subprocess
 import os
+import sys
 
 LINUX_ROOT = {
     "bin",
@@ -18,6 +19,19 @@ def run_chroot(chroot, cmd):
     if err:
         raise RuntimeError(err)
     return out.decode("utf-8")
+
+def is_linux(device):
+    try:
+        ls_output = subprocess.check_output(["debugfs", "-R", "\"ls -l\"", device]).decode("utf-8")
+    except subprocess.CalledProcessError as e:
+        print(e)
+        return False
+    ls_lines = ls_output.split("\n")
+    ls_contents = set([i.split(" ")[-1] for i in ls_lines])
+    if LINUX_ROOT.intersection(ls_contents) == LINUX_ROOT: # LINUX_ROOT is fully contained in ls_contents
+        return True
+    else:
+        return False
 
 def roothack_linux(mountpoint):
     print("Linux roothack")
@@ -69,17 +83,13 @@ def roothack_linux(mountpoint):
 
     print("Saved root shell at", location_chroot)
     print("You can now boot back into the os and run:")
-    print("~/iamroot")
+    print(location_chroot)
 
-def is_linux(device):
-    try:
-        ls_output = subprocess.check_output(["debugfs", "-R", "\"ls -l\"", device]).decode("utf-8")
-    except subprocess.CalledProcessError as e:
-        print(e)
-        return False
-    ls_lines = ls_output.split("\n")
-    ls_contents = set([i.split(" ")[-1] for i in ls_lines])
-    if LINUX_ROOT.intersection(ls_contents) == LINUX_ROOT: # LINUX_ROOT is fully contained in ls_contents
-        return True
-    else:
-        return False
+def direct_shell(mountpoint):
+    print("### I Am Root TK direct shell by highghlow ###")
+    subprocess.Popen(["sudo", "chroot", mountpoint, "sh"], stdout=sys.stdout, stderr=sys.stderr, stdin=sys.stdin).wait()
+
+TOOLS = {
+    "Gain root permissions on the os": roothack_linux,
+    "Run a shell": direct_shell
+}

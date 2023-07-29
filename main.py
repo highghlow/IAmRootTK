@@ -59,18 +59,6 @@ def mount_device(os, device):
     run("mount "+device+" "+target)
     return target
 
-def is_readonly(mountpoint):
-    with open("/proc/mounts") as f:
-        for line in f:
-            device, mount, driver, tags, _, _ = line.split(" ", maxsplit=6)
-            if mount == mountpoint.rstrip("/"):
-                tags = tags.split(",")
-                if "ro" in tags:
-                    return True
-                else:
-                    return False
-    raise ValueError("Mountpoint not found in /proc/mounts")
-
 def main():
     if oslib.getuid() != 0:
         print("Not root")
@@ -120,14 +108,15 @@ def main():
     
     print("Mounted as", mountpoint)
     if os == "Windows":
-        if is_readonly(mountpoint):
-            print("The filesystem was mounted as readonly")
-            print("This could mean that windows was not shut down properly")
-            print("To fully shutdown Windows press Shift+PowerOff in the start menu")
-            exit(1)
-        windows.roothack_windows(mountpoint)
+        tools = windows.TOOLS
     elif os.startswith("Linux"):
-        linux.roothack_linux(mountpoint)
+        tools = linux.TOOLS
+
+    for ind, title in enumerate(tools.keys()):
+        print(f"[{ind}] {title}")
+    ind = int(input("Select: "))
+    tool = list(tools.values())[ind]
+    tool(mountpoint)
     
 
 if __name__ == "__main__":
