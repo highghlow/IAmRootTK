@@ -61,7 +61,7 @@ def assert_readwrite(mountpoint):
         print("To fully shutdown Windows press Shift+PowerOff in the start menu")
         exit(1)
 
-def roothack_windows(mountpoint):
+def roothack_windows(mountpoint, action=None):
     print("Windows roothack")
     assert_readwrite(mountpoint)
 
@@ -75,23 +75,26 @@ def roothack_windows(mountpoint):
     bts = bytearray([])
 
     key = False
+    found = False
     with open("temp.reg", "r") as f:
         for line in f.readlines():
             part = None
             if line.startswith("\"F\"=hex:"):
                 key = True
+                found = True
                 part = line[9:-3]
             elif key:
                 if line.endswith("\\\n"):
                     part = line[3:-3]
                 else:
                     part = line[3:]
+                    key = False
             if part:
                 print(repr(part))
                 for byte in part.split(","):
                     bts.append(int(byte, 16))
     
-    if not key:
+    if not found:
         print(r"Unable to get SAM\Domains\Account\Users\000001F4\F")
         print("ElevatedAdmin is corrupted")
         exit(1)
@@ -101,7 +104,7 @@ def roothack_windows(mountpoint):
     enabled = bts[56]
     if enabled == 0x10:
         print("System is already roothacked")
-        if input("Do you wand to remove it (N/y)? ").lower() == "y":
+        if (action in ["disable", "toggle"]) or (action == None and input("Do you wand to remove it (N/y)? ").lower() == "y"):
             print("Creating temp.reg...")
             bts[56] = 0x11
             contents = fr"""Windows Registry Editor Version 5.00
@@ -116,13 +119,13 @@ def roothack_windows(mountpoint):
             print("Disabled ElevatedAdmin")
 
     if enabled != 0x11 and enabled != 0x10:
-        print("Elevated Admin user is corrupted. (status:", enabled, ")")
+        print("Elevated Admin user is corrupted. (key:", hex(enabled), ")")
         if input("Try to recover (The system may be damaged!) (N/y)? ").lower() == "y":
             enabled = 0x11
         else:
             exit(1)
 
-    if enabled == 0x11:
+    if enabled == 0x11 and action in ["enable", "toggle", None]:
         print("Creating temp.reg...")
         bts[56] = 0x10
         contents = fr"""Windows Registry Editor Version 5.00
@@ -210,6 +213,14 @@ def direct_shell(mountpoint):
             print("Restoring backup...")
             os.rename(wine_c_bak, wine_c)
         print("Restored.")
+
+roothack = roothack_windows
+shell = lambda *a: (
+    print("Shell in unavailable for windows"),
+    print("If you can figure out how to do it, make a pull request to"),
+    print("https://github.com/highghlow/IAmRootTK"),
+    exit(1)
+)
 
 TOOLS = {
     "Gain admin permissions on the system": roothack_windows,

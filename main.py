@@ -2,6 +2,8 @@ import subprocess
 import glob
 import random
 import os as oslib
+import argparse
+
 import linux
 import windows
 
@@ -60,15 +62,47 @@ def mount_device(os, device):
     return target
 
 def main():
+
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument("-w", "--windows", action="store_true", help = "Apply actions to a Windows installation")
+    parser.add_argument("-l", "--linux", action="store_true", help = "Apply actions to a Linux installation")
+    parser.add_argument("-a", "--any", action="store_true", help = "Apply actions to any installation")
+    parser.add_argument("-d", "--device", type=str, required=False, help = "Apply actions to an installation on <device>")
+    parser.add_argument("-o", "--os", choices=["windows", "linux", "w", "l"], required=False, help = "Manually select the OS (use only with --device)")
+
+    parser.add_argument("-r", "--roothack", choices=["enable", "disable", "toggle", "e", "d", "t"], required=False, help = "Roothack the selected installation")
+    parser.add_argument("-s", "--shell", action="store_true", help = "Run a shell on the selected installation (Linux only)")
+   # parser.add_argument("-c", "--custom", type=str, required=False, help = "Apply a custom action to the selected installation") Coming soon
+
+    args = parser.parse_args()
+
+    argserror = False
+    if [args.windows, args.linux, args.any, args.device].count(True) > 1:
+        print("error: only use os flag")
+        argserror = True
+    
+    if bool(args.os) != bool(args.device):
+        print("error: use --os only with --device")
+        argserror = True
+    
+    if [args.roothack, args.shell].count(True) > 1:
+        print("error: only use 1 action flag")
+        argserror = True
+    
+    if argserror: exit(1)
+
     if oslib.getuid() != 0:
         print("Not root")
         print("You need to run this from a live usb on the computer you want to roothack")
         print("You can either do this through BIOS (Google: \"<device manufacturer> boot from USB\")")
         print("Or by pressing Shift+Reboot in windows start menu")
         exit(-1)
+
     print("Loading existing iamroot mounts...")
     toolkit_mounts = get_toolkit_mounts()
     print(f"Found {len(toolkit_mounts)} iamroot mounts")
+
     if toolkit_mounts:
         for mount in toolkit_mounts:
             print("Unmounting", mount)
@@ -76,47 +110,104 @@ def main():
                 run("sudo umount "+mount)
             oslib.rmdir(mount)
             print("Done")
-    print("Loading partitions info...")
-    partitions = get_partitions()
-    print("Searching for operating systems...")
-    oses = []
-    for partdata in partitions:
-        disk, device, start, end, sectors, size, type = partdata
-        if type == "Linux filesystem":
-            print("Linux compatible filesystem on", device)
-            if "/" in get_mounts(device):
-                print(device, "is mounted as root")
-                oses.append(("Linux_self", device))
-                continue
-            if linux.is_linux(device):
-                print("Linux on", device)
-                oses.append(("Linux", device))
-        elif type == "Microsoft basic data":
-            print("Windows compatible filesystem on", device)
-            if windows.is_windows(device):
-                print("Windows on", device)
-                oses.append(("Windows", device))
-    print("=== OSs ===")
-    for ind, osdata in enumerate(oses):
-        os, device = osdata
-        if os == "Linux_self":
-            os = "Linux (current)"
-        print(f"[{ind}]", os, "on", device)
-    osid = int(input("Select os to roothack: "))
-    os, device = oses[osid]
+
+    if not args.device:
+        print("Loading partitions info...")
+        partitions = get_partitions()
+        print("Searching for operating systems...")
+
+        oses = []
+        for partdata in partitions:
+            disk, device, start, end, sectors, size, type = partdata
+            if type == "Linux filesystem":
+                print("Linux compatible filesystem on", device)
+                if "/" in get_mounts(device):
+                    print(device, "is mounted as root")
+                    oses.append(("linux_self", device))
+                    continue
+                if linux.is_linux(device):
+                    print("Linux on", device)
+                    oses.append(("linux", device))
+            elif type == "Microsoft basic data":
+                print("Windows compatible filesystem on", device)
+                if windows.is_windows(device):
+                    print("Windows on", device)
+                    oses.append(("windows", device))
+    
+    if not (args.windows or args.linux or args.any or args.device):
+        print("=== OSs ===")
+        for ind, osdata in enumerate(oses):
+            os, device = osdata
+
+            display_os = {
+                "linux": "Linux",
+                "linux_self": "Linux (current)",
+                "windows": "Windows"
+            }[os]
+
+            print(f"[{ind}]", display_os, "on", device)
+
+        osid = int(input("Select os to roothack: "))
+        os, device = oses[osid]
+    else:
+        if args.device:
+            os = {
+                "w": "windows",
+                "l": "linux"
+            }.get(args.os, args.os)
+            device = args.device
+        else:
+            if args.any:
+                selected = oses
+                if len(selected) > 1:
+                    raise ValueError("Multiple installations found")
+                if not selected:
+                    raise ValueError("No installations found")
+
+            if args.linux:
+                selected = list(filter(lambda x: args.linux and x[0].startswith("linux"), oses))
+                if len(selected) > 1:
+                    raise ValueError("Multiple Linux installations found")
+                if not selected:
+                    raise ValueError("No Linux installations found")
+
+            if args.windows:
+                selected = list(filter(lambda x: args.windows and x[0] == "windows", oses))
+                if len(selected) > 1:
+                    raise ValueError("Multiple Windows installations found")
+                if not selected:
+                    raise ValueError("No Windows installations found")
+            
+            select = selected[0]
+            os, device = select
+
     mountpoint = mount_device(os, device)
     
     print("Mounted as", mountpoint)
-    if os == "Windows":
+    if os == "windows":
         tools = windows.TOOLS
-    elif os.startswith("Linux"):
+        roothack = windows.roothack
+        shell = windows.shell
+    elif os.startswith("linux"):
         tools = linux.TOOLS
+        roothack = linux.roothack
+        shell = linux.shell
 
-    for ind, title in enumerate(tools.keys()):
-        print(f"[{ind}] {title}")
-    ind = int(input("Select: "))
-    tool = list(tools.values())[ind]
-    tool(mountpoint)
+    if not (args.roothack or args.shell):
+        for ind, title in enumerate(tools.keys()):
+            print(f"[{ind}] {title}")
+        ind = int(input("Select: "))
+        tool = list(tools.values())[ind]
+        tool(mountpoint)
+    elif args.roothack:
+        action = {
+            "e": "enable",
+            "d": "disable",
+            "t": "toggle"
+        }.get(args.roothack, args.roothack)
+        roothack(mountpoint, action)
+    elif args.shell:
+        shell(mountpoint)
     
 
 if __name__ == "__main__":
