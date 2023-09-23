@@ -33,7 +33,7 @@ def is_linux(device):
     else:
         return False
 
-def roothack_linux(mountpoint, action, userselect=None):
+def roothack_linux(mountpoint, action=None, userselect=None):
     print("Linux roothack")
     print("Loading users...")
 
