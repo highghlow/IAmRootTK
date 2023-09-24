@@ -3,6 +3,7 @@ import glob
 import random
 import os as oslib
 import argparse
+import sys
 
 import linux
 import windows
@@ -75,6 +76,8 @@ def main():
     parser.add_argument("-s", "--shell", action="store_true", help = "Run a shell on the selected installation (Linux only)")
    # parser.add_argument("-c", "--custom", type=str, required=False, help = "Apply a custom action to the selected installation") Coming soon
 
+    parser.add_argument("-n", "--no-updates", action="store_true", help = "Do not check for updates")
+
     args = parser.parse_args()
 
     argserror = False
@@ -98,6 +101,14 @@ def main():
         print("You can either do this through BIOS (Google: \"<device manufacturer> boot from USB\")")
         print("Or by pressing Shift+Reboot in windows start menu")
         exit(-1)
+
+    if not args.no_updates:
+        try:
+            print("Checking for updates...")
+            print("Press Ctrl+C to cancel")
+            subprocess.Popen(["git", "pull"], stdout=sys.stdout, stderr=sys.stderr, stdin=sys.stdin).wait()
+        except KeyboardInterrupt:
+            print("Canceled.")
 
     print("Loading existing iamroot mounts...")
     toolkit_mounts = get_toolkit_mounts()
