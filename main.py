@@ -157,9 +157,20 @@ def main():
             }[os]
 
             print(f"[{ind}]", display_os, "on", device)
+        print("[/dev/device] Manually set the device")
 
-        osid = int(input("Select os to roothack: "))
-        os, device = oses[osid]
+        deviceorid = input("Select os to roothack: ")
+
+        if deviceorid.isdigit():
+            osid = int(deviceorid)
+            os, device = oses[osid]
+        else:
+            os = {
+                "w": "windows",
+                "l": "linux"
+            }.get( input("OS (windows/linux/w/l): ") )
+            device = deviceorid
+
     else:
         if args.device:
             os = {
