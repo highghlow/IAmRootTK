@@ -100,7 +100,7 @@ def main():
         print("You need to run this from a live usb on the computer you want to roothack")
         print("You can either do this through BIOS (Google: \"<device manufacturer> boot from USB\")")
         print("Or by pressing Shift+Reboot in windows start menu")
-        exit(-1)
+        exit(subprocess.Popen(["sudo", sys.executable, __file__], stdout=sys.stdout, stdin=sys.stdin, stderr=sys.stderr).wait())
 
     if not args.no_updates:
         try:
