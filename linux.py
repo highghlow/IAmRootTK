@@ -117,7 +117,12 @@ def roothack_linux(mountpoint, action=None, userselect=None):
 
 def direct_shell(mountpoint):
     print("### I Am Root TK direct shell by highghlow ###")
-    subprocess.Popen(["sudo", "chroot", mountpoint, "/bin/sh"], stdout=sys.stdout, stderr=sys.stderr, stdin=sys.stdin).wait()
+    if os.path.exists(os.path.join(mountpoint, "bin/sh")):
+        run = "/bin/sh"
+    else:
+        print("/bin/sh not found")
+        run = input("Executable: ")
+    subprocess.Popen(["sudo", "chroot", mountpoint, run], stdout=sys.stdout, stderr=sys.stderr, stdin=sys.stdin).wait()
 
 roothack = lambda mountpoint, action: roothack_linux(mountpoint, action, ":all:")
 shell = direct_shell
