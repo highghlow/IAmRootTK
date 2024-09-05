@@ -1,11 +1,5 @@
-# IAmRoot Toolkit
-Allows you to get root/system permisions on any pc where you have access to bios
-### This project should be ran from a linux live usb on a pc you want to roothack
-## Quickstart
-```bash
-sudo apt install git
+# The project has moved to [codeberg](https://codeberg.org/highghlow/IAmRootTK)
+- [Where?](https://codeberg.org/highghlow/IAmRootTK/)
+- [Why?](https://sfconservancy.org/GiveUpGitHub/)
 
-git clone https://github.com/highghlow/IAmRootTK
-cd IAmRootTK
-python3 main.py
-```
+![image](https://github.com/user-attachments/assets/45d80320-cb3c-452b-a59d-135d294d061a)
